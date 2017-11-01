@@ -1,8 +1,9 @@
 <?php
 
+require_once __DIR__ . '/../config/global.php';
 
 /**
- * BASIC QUERY BUILDER, SIMPLE FOR MYGUITAR
+ * BASIC QUERY BUILDER
  * @Author Mitchell Murphy
  * @Author_Email mitchell.murphy96@gmail.com
  * 
@@ -36,13 +37,18 @@ class QueryBuilder {
     public static function getInstance() {
         return new QueryBuilder();
     }
+    
+    public function start() {
+        return new QueryBuilder();
+    }
 
     /**
      *  increment of state
      */
     function transition($qryType = NULL) {
-        if (isset($qryType))
+        if (isset($qryType)) {
             $this->qryType = $qryType;
+        }
         $this->state++;
     }
 
@@ -236,14 +242,34 @@ class QueryBuilder {
         return $this;
     }
 
+    /**
+     * Will return 2D array if more than one record, otherwise the single record will be contained in a 1D array
+     * Array indexes correspond to MySQL columns
+     * @return type
+     */
     function get() {
-        $ret = array();
         $query_result = $this->db->query($this->query);
-        while ($row = $query_result->fetch_assoc()) {
-            $ret[] = $row;
+        if($query_result->num_rows > 1) {
+            while ($row = $query_result->fetch_assoc()) {
+                $ret[] = $row;
+            }
+        } else {
+            while ($row = $query_result->fetch_assoc()) {
+                $ret = $row;
+            }
         }
         $query_result->free();
         return $ret;
+    }
+    
+    function numRows() {
+        $query_result = $this->db->query($this->query);
+        return $query_result->num_rows;
+    }
+    
+    function recordsExist() {
+        $query_result = $this->db->query($this->query);
+        return $query_result->num_rows > 0;
     }
 
     function exec() {
