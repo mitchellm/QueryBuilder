@@ -21,7 +21,7 @@ class QueryBuilder {
     private $query;
     private $state;
     private $db;
-    private $firstWhere;
+    private $firstWhere, $firstSet;
     private $qryType;
 
     /**
@@ -40,7 +40,7 @@ class QueryBuilder {
     public static function getInstance() {
         return new QueryBuilder();
     }
-    
+
     /**
      * Begins a new instance of the querybuilder
      * @return \QueryBuilder
@@ -138,7 +138,12 @@ class QueryBuilder {
         $toVal = $this->clean($toVal);
         if ($this->state > 0 && $this->qryType == "UPDATE") {
             if (!is_array($column) && !is_array($toVal)) {
-                $this->query .= "SET `" . $column . "` = '" . $toVal . "' ";
+                if (!$this->firstSet) {
+                    $this->query .= "SET `" . $column . "` = '" . $toVal . "' ";
+                    $this->firstSet = true;
+                } else {
+                    $this->query .= ",`" . $column . "` = '" . $toVal . "' ";
+                }
             } else {
                 $columnC = count($column);
                 $varC = count($toVal);
@@ -281,13 +286,13 @@ class QueryBuilder {
     function get() {
         $ret = null;
         $query_result = $this->db->query($this->query);
-            while ($row = $query_result->fetch_assoc()) {
-                $ret[] = $row;
-            }
+        while ($row = $query_result->fetch_assoc()) {
+            $ret[] = $row;
+        }
         $query_result->free();
         return $ret;
     }
-    
+
     /**
      * Returns the num rows
      * @return numRows int
@@ -296,7 +301,7 @@ class QueryBuilder {
         $query_result = $this->db->query($this->query);
         return $query_result->num_rows;
     }
-    
+
     /**
      * Do records exist with the current query?
      * @return type
@@ -314,7 +319,7 @@ class QueryBuilder {
         $query = $this->db->query($this->query);
         return $query;
     }
-    
+
     /**
      * Returns the last error recorded
      * @return type
